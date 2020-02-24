@@ -1,0 +1,199 @@
+# guideline.py
+# クラスのプロパティ・メソッドを整理する
+# Copyright (c) 2020 by Seiichi Nukayama
+
+dlgo/goboard_slow.py
+=============================================================================
+Move
+コンストラクタ: point, is_pass, is_resign
+プロパティ: point -- Point(row, col)
+            is_play -- True / False
+            is_pass -- True / False
+            is_resign -- True / False
+クラスメソッド:
+  Move.play(point)
+      引数: point
+      返り値: Move.point に point をセットしたインスタンス
+          そのポイントに石をおく
+          すると、そのポイントはNoneではないので、is_play は True となる。
+  Move.pass_turn
+      引数: なし
+      返り値: Move.is_pass に Trueをセットしたインスタンス
+          パスをする
+  Move.resign
+      引数: なし
+      返り値: Move.is_resign に Trueをセットしたインスタンス
+          投了する
+
+GoString
+コンストラクタ: color, stones, liberties
+プロパティ: ocolor -- Player.black / Player.white
+            stones -- 石の集合 set              
+            liberties -- 呼吸点の集合 set
+メソッド:
+  remove_liberty( point ) -- 呼吸点からそのポイントを削除
+      引数: point
+      返り値: なし （liberties.remove(point)）
+  add_liberty( point ) -- そのポイントを呼吸点に追加
+      引数: point
+      返り値: なし （liberties.add(point)）
+  merged_with( go_string ) -- その連を吸収合体
+      引数: go_string
+      返り値: go_string
+  __eq__( other ) -- 2つの連が同じかどうか( othier -- 他の連)
+      引数: go_string
+      返り値: boolean
+プロパティメソッド:
+  num_liberties -- 呼吸点の数を返す
+      引数: なし
+      返り値: int -- len(self.liberties)
+
+
+Board
+コンストラクタ: num_rows, num_cols
+プロパティ: num_rows -- 行の数
+            num_cols -- 列の数
+            _grid -- 点の情報。辞書。
+                     key : Point(row, col)
+                     value : たぶん Player ( = color )
+                     _grid.get(point)で、そのポイントの連情報を得ることができる。
+メソッド:
+  place_stone( player, point ) -- 盤上に石を置く
+      引数: player -- Player.black あるいは Player.white
+            point -- Point(row, col)
+      返り値: なし。（Board._gridの情報を書き換えるから）
+          メソッド内変数:adjacent_same_color -- 同じ色のリスト
+                         adjacent_oppsite_color -- 相手の色のリスト
+                         liberties -- 呼吸点のリスト
+                         neighbor_string -- 隣接点の値 _grid.get(neighbor)
+          上下左右の隣接点(neighbor_string=連)を調べる
+              空なら、呼吸点に加える。
+              同じ色の連であれば、adjacent_same_colorリストに加える。
+              相手の色の連であれば、adjacent_oppsite_colorリストに加える。
+          new_string（連）をつくる。GoString( player, [point], liberties )
+          adjacent_same_colorリストの中に同じ色の連があれば、new_string（連）とその連を合体させる。
+          新しくできた連のそれぞれのポイントに、新しい連の情報をセットする。
+          相手の色の連の呼吸点リストから、今のポイントを削除する。
+          もし、相手の色の連の呼吸点の数がゼロになれば、相手の色の連を削除する。
+  is_on_grid( point ) -- そのポイントが盤上にあれば True、なければ False
+      引数: point -- Point(row, col)
+      返り値: boolean
+  get( point ) -- そのポイントの連の色を返す。
+      引数: point
+      返り値: string.color
+  get_go_string( point ) -- そのポイントの連情報を返す。(color, stones, liberties)
+      引数: point
+      返り値: string
+  _remove_string( string ) -- 連を取り除く。
+      引数: string -- GoStringのこと。
+      返り値: なし。（Board._gridの情報を書き換える）
+          取り除く対象の連のそれぞれのポイントをNoneにする。
+          その際、そのポイントの隣の点を調べ、もし、相手の連であれば、その連に呼吸点を追加する。
+
+
+GameState
+コンストラクタ: board, next_player, previous, move
+プロパティ: board -- 盤面の情報
+            next_player -- プレーヤー
+            previous_state -- 前の盤面の情報
+            last_move -- 前回の指し手
+メソッド:
+  apply_move( move )
+      引数: move -- Move.play(row, col)、あるいは Move.pass_turn、Move.resign
+      返り値: GameState( next_board, next_player.other, self, move)
+            指し手を行った場合、盤面をディープコピーしてnext_boardとする。
+            盤上に石を置く。
+            それ以外（パス・投了の場合）は、盤面をそのまま引き継ぐ。
+            そして、新しく GameState のインスタンスを作成する。
+  new_game( board_size ) -- クラスメソッド。
+      引数: board_size -- 9、19 などの数値
+      返り値: GameState( board, Player.black, None, None )
+            board -- (19, 19) あるいは (9, 9)のタプル。
+  is_over -- 終局しているか、判定。
+      引数: なし
+      返り値: boolean -- 投了もしくは双方がパスの場合 True、すなわち終局。
+  is_move_self_capture -- 自殺手のルールを強制する
+      引数: player -- Player.black / Player.white
+            move   -- Move.play(row, col), あるいは Move.pass_turn、Move.resign
+      返り値: boolean （呼吸点がゼロになった = True）
+  situation -- プロパティ・メソッド
+      引数: なし
+      返り値: タプル ( self.next_player, self.board )
+            次のプレーヤーと盤面情報を返す
+  does_move_violate_ko
+      引数: player, move
+      返り値: boolean -- コウであれば True、コウでなければ False を返す。
+  is_valid_move
+      引数: move -- Move.play(row, col)
+      返り値: boolean -- 終局なら False。パスあるいは投了なら True
+            石を置いたポイントが None であり、なおかつ、
+            プレーヤーの指し手が自殺手であり、なおかつ、
+            プレーヤーの指し手がコウである場合、True -- こんな場合って、ある？
+=============================================================================
+            
+            
+agent/helper.py
+=============================================================================
+is_point_an_eye( board, point, color ) -- 「眼」であるかどうかの判定
+    引数:  board, point, color
+    返り値: boolean -- 「眼」であれば True。でなければ False。
+        pointの盤面情報が None でなかったら、すなわち、石あるいは連であったら、False
+        つまり、空の点であること。
+        そのポイントの隣の点が自身の色ではなかったら、false。つまり、上下左右が
+        自分の色の石であること。
+        四隅のうち、三つ以上が自分の色の石であれば、True。
+        辺に自身があれば、すなわち四隅のうち、いくつから盤面から外れている場合、
+        外れている隅と自分の色の隅が合計で四でれば、True。
+=============================================================================
+
+
+agent/base.py
+=============================================================================
+Agent
+  コンストラクタ: なし
+  select_move -- インターフェース
+      引数: game_state -- GameStateのインスタンスを引数にとる。
+=============================================================================
+      
+agent/nave.py
+=============================================================================
+RandomBot( Agent )
+    親クラスAgentを継承。
+  select_move( game_state )
+      引数: game_state -- GameStateクラスのインスタンス
+      返り値: Move.play( random.choice( candidates )) -- 選択した指し手
+          有効な指し手で、眼ではない点ものをリストにして、その中からランダムに
+          指し手を選ぶ。
+          もし、指し手が無ければ、パス。
+=============================================================================
+
+dlgo/utils.py
+=============================================================================
+print_move( player, move )
+    引数:  player, move
+    返り値: なし
+    副作用: 画面にプレーヤーと着手の点を文字情報として表示
+
+print_board( board )
+    引数: board -- クラスBoardのインスタンス
+    返り値: なし
+    副作用: 画面に盤面情報を表示。
+=============================================================================
+
+bot_v_bot.py
+=============================================================================
+main()
+    引数: なし
+    返り値: なし
+        board_sizeを決定
+        game -- ゲーム状態を新規作成
+        bots -- 黒と白のボットを作成
+        geme.is_over() になるまで繰り返す。--- (A)
+        画面の消去。
+        盤面( game.board )を描く。
+        黒あるいは白の指し手を決定。
+        指し手を文字情報として表示。
+        指し手を適用して、gameに反映。
+        (A)にもどる。
+=============================================================================
+      
