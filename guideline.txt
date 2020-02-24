@@ -1,4 +1,4 @@
-# guideline.py
+# guideline.txt
 # クラスのプロパティ・メソッドを整理する
 # Copyright (c) 2020 by Seiichi Nukayama
 
