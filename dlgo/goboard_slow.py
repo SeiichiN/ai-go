@@ -153,23 +153,17 @@ class Board():
             new_string = new_string.merged_with( same_color_string )
         for new_string_point in new_string.stones:                     # <7>
             self._grid[ new_string_point ] = new_string
-
-        self._hash ^= zobrist.HASH_CODE[ point, player ]               # <8>
-            
         for other_color_string in adjacent_opposite_color:             # <9>
-            replacement = other_color_string.without_liberty( point )
-            if replacement.num_liberties:                              # <10>
-                self._replace_string(
-                    other_color_string.without_liberty( point ))
-            else:
+            other_color_string.remove_liberty( point )
+        for other_color_string in adjacent_opposite_color:             # <10>
+            if other_color_string.num_liberties == 0:
                 self._remove_string( other_color_string )              # <11>
         # <6> 同じ色の隣接する連をマージする
         # <7> 新しくできた連のそれぞれのポイントに、連の情報をそれぞれセットする。
         # <8> この点とプレーヤーのハッシュコードを適用。
         # <9> 隣接点に相手の色があれば相手の色の呼吸点を減らして
-        #     replacement とする。
-        # <10> replacement に呼吸点があれば
-        # <11> 敵の色の連の呼吸点が 0 になっている場合は、それを取り除く
+        # <10> 隣接点に相手の色があれば、さらに相手の呼吸点が 0 であれば、
+        # <11> 敵の色の連の呼吸点を取り除く
 
     def _replace_string( self, new_string ):
         for point in new_string.stones:
