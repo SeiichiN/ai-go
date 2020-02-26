@@ -19,7 +19,7 @@ class RandomBot( Agent ):
         for r in range( 1, game_state.board.num_rows + 1 ):
             for c in range( 1, game_state.board.num_cols + 1 ):
                 candidate = Point( row=r, col=c )
-                if game_state.is_valie_move( Move.play( candidate ) ) and \
+                if game_state.is_valid_move( Move.play( candidate ) ) and \
                    not is_point_an_eye( game_state.board,            # <1>
                                         candidate,
                                         game_state.next_player ):

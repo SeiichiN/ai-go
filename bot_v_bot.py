@@ -27,6 +27,8 @@ def main():
         bot_move = bots[ game.next_player ].select_move( game )
         print_move( game.next_player, bot_move )
         game = game.apply_move( bot_move )
+        if count is 50:
+            sys.exit(0)
     # <1> botが着手する前の盤面を描く。
         
 if __name__ == '__main__':                             # <2>

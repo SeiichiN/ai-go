@@ -55,22 +55,28 @@ class Move():
 #   liberties -- 呼吸点の集合
 # (例)
 #   ren1 = GoString(white, 3, 8) -- ren1は白で、3つの石があり、呼吸点は8個である。
-#   ren1.remove_liberty(point) -- 呼吸点を1つ削除する。
+#   ren1.wighout_liberty(point) -- 呼吸点を1つ削除する。
 class GoString():
     def __init__( self, color, stones, liberties ):
         self.color = color
-        self.stones = set(stones)
-        self.liberties = set(liberties)
+        self.stones = frozenset(stones)                    # <1>
+        self.liberties = frozenset(liberties)
+    # <1> frozenset -- 一度作成すると、追加削除はできない。
 
     # 呼吸点を削除
     # removeは集合型のメソッド。要素を削除する。
-    def remove_liberty( self, point ):
-        self.liberties.remove( point )
+    def without_liberty( self, point ):
+        new_liberties = self.liberties - set([point])                # <1>
+        return GoString( self.color, self.stones, new_liberties )    # <2>
+    # <1> 呼吸点の集合と、削除する要素の集合との、差集合をとる。
+    # <2> 新しい呼吸点を使った連を作成する。
 
     # 呼吸点を追加
-    # add -- 集合に要素を追加する
-    def add_liberty( self, point ):
-        self.liberties.add( point )
+    # with_liberty -- 集合に要素を追加する
+    def with_liberty( self, point ):
+        new_liberties = sel.liberties | set([point])                 # <1>
+        return GoString( self.color, self.stones, new_liberties )
+    # <1> 今までの連と加えたい要素の集合との排他的論理和
 
     # 2つの連を合体
     def merged_with( self, go_string ):
@@ -103,6 +109,9 @@ class GoString():
             self.stones == other.stones and \
             self.liberties == other.liberties
 
+# ゾブリストハッシュを使う
+from dlgo import zobrist
+
 # 盤面
 # num_rows, num_cols -- 格子線の数
 # _grid -- 盤面の情報を辞書リストでもっている。
@@ -113,6 +122,7 @@ class Board():
         self.num_rows = num_rows
         self.num_cols = num_cols
         self._grid = {}                    # 辞書 -- {キー: 値, ...}
+        self._hash = zobrist.EMPTY_BOARD
     # _grid -- Pointをkeyとした辞書である。
     #          value には、GoStringが入っている。
 
@@ -153,28 +163,16 @@ class Board():
             new_string = new_string.merged_with( same_color_string )
         for new_string_point in new_string.stones:                     # <7>
             self._grid[ new_string_point ] = new_string
-
-        self._hash ^= zobrist.HASH_CODE[ point, player ]               # <8>
-            
+        for other_color_string in adjacent_opposite_color:             # <8>
+            other_color_string.remove_liberty( point )
         for other_color_string in adjacent_opposite_color:             # <9>
-            replacement = other_color_string.without_liberty( point )
-            if replacement.num_liberties:                              # <10>
-                self._replace_string(
-                    other_color_string.without_liberty( point ))
-            else:
-                self._remove_string( other_color_string )              # <11>
+            if other_color_string.num_liberties == 0:
+                self._remove_string( other_color_string )
         # <6> 同じ色の隣接する連をマージする
         # <7> 新しくできた連のそれぞれのポイントに、連の情報をそれぞれセットする。
-        # <8> この点とプレーヤーのハッシュコードを適用。
-        # <9> 隣接点に相手の色があれば相手の色の呼吸点を減らして
-        #     replacement とする。
-        # <10> replacement に呼吸点があれば
-        # <11> 敵の色の連の呼吸点が 0 になっている場合は、それを取り除く
+        # <8> 敵の色の隣接する連の呼吸点を減らす
+        # <9> 敵の色の連の呼吸点が 0 になっている場合は、それを取り除く
 
-    def _replace_string( self, new_string ):
-        for point in new_string.stones:
-            self._grid[ point ] = new_string
-        
     def is_on_grid( self, point ):
         return 1 <= point.row <= self.num_rows and \
             1 <= point.col <= self.num_cols
@@ -205,16 +203,13 @@ class Board():
                 if neighbor_string is None:
                     continue
                 if neighbor_string is not string:               # <4>
-                    self._replace_string(
-                        neighbor_string.with_liberty( point ))
+                    neighbor_string.add_liberty( point )
             self._grid[ point ] = None                          # <5>
-            self._hash ^= zobrist.HASH_CODE[ point, string.color ]  # <6>
 # <1> string.stones --- stonesはpointの集合
 # <2> point.neighbors() --- 隣の点のリスト
 # <3> neighbor_string -- 隣の連の情報
 # <4> neighbor_string が 取られる連でなかったら、相手の連の呼吸点の集合に追加する。
 # <5> 石を取り除いたので、そのポイントは None になる
-# <6> ソブリストハッシュを使ってこの着手のハッシュを取り消す必要がある。
 
 class GameState():
     def __init__( self, board, next_player, previous, move ):
