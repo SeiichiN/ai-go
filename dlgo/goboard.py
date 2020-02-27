@@ -169,7 +169,7 @@ class Board():
         for other_color_string in adjacent_opposite_color:             # <9>
             replacement = other_color_string.without_liberty( point )
             if replacement.num_liberties:                              # <10>
-                self._replace_string( other_color_string.wighout_liberty( point ))
+                self._replace_string( other_color_string.without_liberty( point ))
             else:
                 self._remove_string( other_color_string )
         # <6> 同じ色の隣接する連をマージする
@@ -200,6 +200,11 @@ class Board():
             return None
         return string
 
+    # 連を更新する
+    def _replace_string( self, new_string ):
+        for point in new_string.stones:
+            self._grid[ point ] = new_string
+
     # 連を取り除く
     # 連を取り除くと、相手の石が呼吸点を得ることができる
     # string -- 取られる連
@@ -210,20 +215,42 @@ class Board():
                 if neighbor_string is None:
                     continue
                 if neighbor_string is not string:               # <4>
-                    neighbor_string.add_liberty( point )
+                    self._replace_string( neighbor_string.with_liberty( point ))
             self._grid[ point ] = None                          # <5>
-# <1> string.stones --- stonesはpointの集合
-# <2> point.neighbors() --- 隣の点のリスト
-# <3> neighbor_string -- 隣の連の情報
-# <4> neighbor_string が 取られる連でなかったら、相手の連の呼吸点の集合に追加する。
-# <5> 石を取り除いたので、そのポイントは None になる
+
+            self._hash ^= zobrist.HASH_CODE[ point, string.color ]  # <6>
+    # <1> string.stones --- stonesはpointの集合
+    # <2> point.neighbors() --- 隣の点のリスト
+    # <3> neighbor_string -- 隣の連の情報
+    # <4> neighbor_string が 取られる連でなかったら、相手の連の呼吸点の集合に追加する。
+    # <5> 石を取り除いたので、そのポイントは None になる
+    # <6> そのポイントにハッシュ値を XOR することで、そのポイントの石を
+    #     取り除いた盤面を得ることができる。
+
+    # 盤の現在のゾブリストハッシュを返す
+    def zobrist_hash( self ):
+        tmp_hash = self._hash
+        # print( tmp_hash )
+        return tmp_hash
+        # return self._hash
+    
 
 class GameState():
     def __init__( self, board, next_player, previous, move ):
         self.board = board                      # 盤面の情報
         self.next_player = next_player          # 次のプレーヤー
-        self.previous_state = previous          # 前のゲーム状態        
+        self.previous_state = previous          # 前のゲーム状態
         self.last_move = move                   # 最後に行われた着手
+        if self.previous_state is None:
+            self.previous_states = frozenset()
+        else:
+            self.previous_states = frozenset(
+                previous.previous_states |
+                {( previous.next_player, previous.board.zobrist_hash())})  # <1>
+    # <1> 盤が空の場合、self.previous_statesは空のイミュータブルなfrozensetです。
+    #     それ以外の場合は、次のプレーヤーの色と直前のゲーム状態のゾブリストハッシュ
+    #     を追加します。(p81)
+    
 
     # 着手を適用したあと、新しい GameState を返す
     def apply_move( self, move ):
@@ -284,23 +311,14 @@ class GameState():
             return False
         next_board = copy.deepcopy( self.board )           # <1>
         next_board.place_stone( player, move.point )       # <2>
-        next_situation = ( player.other, next_board )      # <3>
-        past_state = self.previous_state                   # <4>
-        while past_state is not None:                      # <5>
-            if past_state.situation == next_situation:     # <6>
-                return True
-            past_state = past_state.previous_state         # <7>
-        return False                                       # <8>
+        next_situation = ( player.other, next_board.zobrist_hash()) # <3>
+        return next_situation in self.previous_states      # <4>
     # <1> 現在の盤をdeepcopyして、next_boardとする。
     # <2> next_boardに次の指し手を実行（石を置く）。
-    # <3> next_board と player.other をタプルにして next_situation とする。
-    # <4> 前回の盤を past_state とする。
-    # <5> 前回の盤が None でない限り実行。
-    # <6> past_sitate.situation と next_situation が同じであれば、
-    #     つまり、「コウ」であれば、True を返す。
-    # <7> past_stateを past_stateの更に前の盤(previous_state)とする。
-    #     それで、もう一度、past_state.situation と next_situation を比べる。
-    # <8> 同じゲーム状況が無ければ、「コウ」ではないので、False を返す。
+    # <3> next_board のハッシュと player.other をタプルにして
+    #     next_situation とする。
+    # <4> self.previous_states の中に next_situation が含まれていれば、
+    #     True、そうでなければ False を返す。
 
     # この着手は指定されたゲーム状態に対して有効か？
     def is_valid_move( self, move ):

@@ -32,3 +32,9 @@ def print_board( board ):
     print( '   ' + ''.join(COLS[ :board.num_cols ]))
     # <1> board.get -- 盤上の格子に石があれば、その色を返す。なければ None
     
+# 人間の入力をBoardのための座標に変換する
+# coords -- C3 とか E7 などの文字列
+def point_from_coords( coords ):
+    col = COLS.index( coords[0] ) + 1
+    row = int( coords[ 1: ])
+    return gotypes.Point( row=row, col=col )

@@ -127,6 +127,9 @@ class Board():
         liberties = []                        # 呼吸点のリスト
         # print( Point(3, 5).neighbors() )
         # [ Point(row=15, col=6), Point(row=17, col=6), Point(row=16, col=5), Point(row=16, col=7) ]
+        # 隣の点を4つ全部調べる。
+        # もし、石が無ければ呼吸点とし、味方の石なら、味方連リストに入
+        # れ、相手石なら相手連リストに入れる。
         for neighbor in point.neighbors():
             if not self.is_on_grid( neighbor ):                # <1>
                 continue
@@ -138,7 +141,9 @@ class Board():
                     adjacent_same_color.append( neighbor_string )
                 else:
                     if neighbor_string not in adjacent_opposite_color:
-                        adjacent_opposite_color.append( neighbor_string )
+                        adjacent_opposite_color.append(
+                            neighbor_string )
+        # 新しい連を作成する
         new_string = GoString( player, [point], liberties )      # <5>
         # <1> neighborが盤上の点ではなかったら、パス
         # <2> _grid.get( key ) -- 指定されたkeyがあれば、その連情報を返す。
@@ -199,16 +204,13 @@ class Board():
                 if neighbor_string is None:
                     continue
                 if neighbor_string is not string:               # <4>
-                    self._replace_string(
-                        neighbor_string.with_liberty( point ))
+                    neighbor_string.add_liberty( point )
             self._grid[ point ] = None                          # <5>
-            self._hash ^= zobrist.HASH_CODE[ point, string.color ]  # <6>
 # <1> string.stones --- stonesはpointの集合
 # <2> point.neighbors() --- 隣の点のリスト
 # <3> neighbor_string -- 隣の連の情報
 # <4> neighbor_string が 取られる連でなかったら、相手の連の呼吸点の集合に追加する。
 # <5> 石を取り除いたので、そのポイントは None になる
-# <6> ソブリストハッシュを使ってこの着手のハッシュを取り消す必要がある。
 
 class GameState():
     def __init__( self, board, next_player, previous, move ):

@@ -1,0 +1,129 @@
+ゾブリストハッシュによるゲームプレイのスピードアップ
+
+この本のp75に「ゾブリストハッシュ」を使ったやり方が書かれてある。
+本を読んでいるだけでは、なかなか頭に入ってこないのだが、実際にやってみると、「なるほど」と思えてくる。
+
+まず、ゾブリストハッシュの生成だが、以下のコードで生成できる。
+
+generate_hash.py
+
+import random
+
+from dlgo.gotypes import Player, Point
+
+def to_python( state ):
+    if state is None:
+        return 'None'
+    if state == Player.black:
+        return Player.black
+    return Player.white
+
+MAX63 = 0x7fffffffffffffff                                 # <1>
+
+table = {}
+empty_board = 0
+for row in range(1, 20):
+    for col in range(1, 20):
+        for state in ( Player.black, Player.white ):       # <2>
+            code = random.randint( 0, MAX63 )              # <3>
+            table[ Point( row, col ), state ] = code       # <4>
+
+print('from .gotypes import Player, Point')
+print('')
+print("__all__ = [ 'HASH_CODE', 'EMPTY_BOARD' ]")
+print('')
+print ('HASH_CODE = {')
+for ( pt, state ), hash_code in table.items():
+    print('    (%r, %s): %r,' % (pt, to_python(state), hash_code))
+print('}')
+print('')
+print('EMPTY_BOARD = %d' % (empty_board,))
+
+# <1> ハッシュ値を生成する大きさ -- 2の4乗の15乗 x 7
+# <2> 黒の場合と白の場合の2通りでハッシュ値を作る
+# <3> ランダムな整数を作っている
+# <4> ハッシュ値を値とするリストを作成している。
+#     キーとなるのは、点と黒あるいは点と白である。
+
+
+これでハッシュ値を生成する。
+
+$ python3 generate_hash.py > dlgo/zobrist.py
+
+dlgoフォルダの中に zobrist.py というファイル名で出力する。
+
+dlgo/zobrist.py
+
+from .gotypes import Player, Point
+
+__all__ = [ 'HASH_CODE', 'EMPTY_BOARD' ]
+
+HASH_CODE = {
+    (Point(row=1, col=1), Player.black): 9050684984190005247,
+    (Point(row=1, col=1), Player.white): 7980824900636502747,
+    (Point(row=1, col=2), Player.black): 7921873393526193162,
+    (Point(row=1, col=2), Player.white): 131708036457382005,
+    (Point(row=1, col=3), Player.black): 2469845453788216988,
+    (Point(row=1, col=3), Player.white): 4127645186946117778,
+    (Point(row=1, col=4), Player.black): 300959995453359257,
+    (Point(row=1, col=4), Player.white): 7057326641934196431,
+    (Point(row=1, col=5), Player.black): 5527919500903501206,
+    (Point(row=1, col=5), Player.white): 6740197587716777324,
+
+...( 途中略 )...
+
+    (Point(row=19, col=17), Player.white): 1301595547064413838,
+    (Point(row=19, col=18), Player.black): 326691728257719907,
+    (Point(row=19, col=18), Player.white): 5582785296310243931,
+    (Point(row=19, col=19), Player.black): 1657534861390325881,
+    (Point(row=19, col=19), Player.white): 4198621638408385957,
+}
+
+EMPTY_BOARD = 0
+
+
+このリストは、2×19×19の 722通りである。(2というのは、黒と白)
+
+盤面に何も置いていない状態は、0(ゼロ)である。
+
+board = EMPTY_BOARD
+
+さてプレイとなって、最初に黒が row=1 col=3 に石を置いたとする。
+そのときの盤面の状態は、
+
+board ^= HASH_CODE[ Point(row=1, col=3), Player.black]
+
+という式で表せる。値として 2469845453788216988 が入る。
+
+次に、白が row=1 col=4 に石を置いたとする。
+その時の盤面の状態は、
+
+board ^= HASH_CODE[ Point(row=1, col=4), Player.white]
+
+で表わすことができる。以下の計算になる。
+
+board = board ^ HASH_CODE[ Point(row=1, col=4), Player.white]
+
+2469845453788216988 XOR 7057326641934196431 = 4879103095793754195
+   以前の盤面               白の着手              新しい盤面
+
+どういうことかというと、「^」あるいは「XOR」というのは「ビット演算」で、
+数値を二進数で演算する。この場合は、「排他的論理和」で、1と1なら0、
+1と0なら1、0と1なら1、0と0なら0となる。
+
+(例) 01001101 XOR 00001001 = 01000100
+
+ということになる。上記の演算は見た目は10進数だが、内部では2進数での
+演算をおこなっている。
+
+ここで面白いのは、仮に白の石が取られたとすると、同じく XOR をとること
+によって、その盤の状態が簡単に表すことができるということである。
+
+4879103095793754195 XOR  7057326641934196431 = 2469845453788216988
+   以前の盤面            白の石(ハッシュ値)       新しい盤面
+
+(例) 01000100 XOR 00001001 = 01001101
+
+このことから、ハッシュ値をつかって、盤面の状態を記録することができる。
+そして、今の盤面と以前の盤面を比較して、「こう」の判定をすることがで
+きるようになる。

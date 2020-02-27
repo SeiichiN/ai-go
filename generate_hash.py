@@ -13,15 +13,15 @@ def to_python( state ):
         return Player.black
     return Player.white
 
-MAX63 = 0x7fffffffffffffff
+MAX63 = 0x7fffffffffffffff                                # <1>
 
 table = {}
 empty_board = 0
 for row in range(1, 20):
     for col in range(1, 20):
-        for state in ( Player.black, Player.white ):
-            code = random.randint( 0, MAX63 )
-            table[ Point( row, col ), state ] = code
+        for state in ( Player.black, Player.white ):      # <2>
+            code = random.randint( 0, MAX63 )             # <3>
+            table[ Point( row, col ), state ] = code      # <4>
 
 print('from .gotypes import Player, Point')
 print('')
@@ -34,3 +34,8 @@ print('}')
 print('')
 print('EMPTY_BOARD = %d' % (empty_board,))
 
+# <1> ハッシュ値を生成する大きさ -- 2の4乗の15乗 x 7
+# <2> 黒の場合と白の場合の2通りでハッシュ値を作る
+# <3> ランダムな整数を作っている
+# <4> ハッシュ値を値とするリストを作成している。
+#     キーとなるのは、点と黒あるいは点と白である。
