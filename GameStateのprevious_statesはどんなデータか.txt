@@ -1,0 +1,121 @@
+goboard.py の中の GameState のところのデータがどうなっているかが、ゾブリストハッシュの
+理解のポイントだと思う。
+そこで、GameStateクラスに処理がわたったとき、プロパティがどうなるかを追いかけてみた。
+
+コンストラクタの各プロパティに値がセットされた時を調べてみた。
+
+"goboard.py" L250
+if self.previous_state is None:
+    self.previous_states = frozenset()
+else:
+    self.previous_states = frozenset(       # 以下の3行の式の値を調べる
+        previous.previous_states |          # <1>
+       {( previous.next_player, previous.board.zobrist_hash())})
+#  以下を挿入した
+if previous is not None:
+    print("previous.previous_states:")
+    explain(previous.previous_states)
+    print("previous.next_player")
+    explain(previous.next_player)
+    print("previous.board.zobrist_hash()")
+    explain(previous.board.zobrist_hash())
+# <1> | -- 論理和 -- 0と0は0、1と0は1、0と1は1、1と1は1。
+
+
+1) まず、黒が第1手をC3にうったとき、previousの盤面状態は以下のようになる。
+    previous.previous_states -- frozenset()     # frozensetの引数は空である
+    previous.next_player -- Player.black
+    previous.board.zobrist_hash() -- 0
+
+    ここから、以下の式はどうなるか？
+    self.previous_states = frozenset(
+        previous.previous_states |
+       {( previous.next_player, previous.board.zobrist_hash())})
+    
+    self.previous_states = frozenset(
+        frozenset() | {( Player.black, 0 )})
+
+Player.black C3
+previous.previous_states     : frozenset()
+previous.next_player         : Player.black
+previous.board.zobrist_hash(): 0    <== 前回のハッシュコード
+
+
+2) 次に白が G5 と打った時、previous の盤面状態は以下である。
+    previous.previous_states -- frozenset({(<Player.black: 1>, 0)})
+    previous.next_player -- Player.white
+    previous.board.zobrist_hash() -- 7685528180565542275
+
+    ここから、以下の式はどうなるか？
+    self.previous_states = frozenset(
+        previous.previous_states |
+       {( previous.next_player, previous.board.zobrist_hash())})
+    
+    self.previous_states = frozenset(
+        frozenset({(<Player.black: 1>, 0)}) | {( <Player.white>, 7685528180565542275 )})
+        = ({(<Player.black: 1>, 0), ( <Player.white>, 7685528180565542275 )})
+        
+Player.white G5
+previous.previous_states      : frozenset({(<Player.black: 1>, 0)})
+previous.next_player          : Player.white
+previous.board.zobrist_hash() : 7685528180565542275   <== 前回のハッシュコード
+
+
+3) 次に黒が D3 と打った時、previous の盤面状態は以下である。
+    previous.previous_states -- frozenset(
+        {(<Player.black: 1>, 0), (<Player.white: 2>, 7685528180565542275)})
+    previous.next_player -- Player.black
+    previous.board.zobrist_hash() -- 8139394106448984692
+
+    ここから、以下の式はどうなるか？
+    self.previous_states = frozenset(
+        previous.previous_states |
+       {( previous.next_player, previous.board.zobrist_hash())})  # <1>
+    
+    self.previous_states = frozenset(
+        ({(<Player.black: 1>, 0), (<Player.white: 2>, 7685528180565542275)}) |
+        {( <Player.black>, 8139394106448984692 )})
+        = ({(<Player.black: 1>, 0),
+            (<Player.white>, 7685528180565542275),
+            (<Player.black>, 8139394106448984692)})
+        
+
+Player.black D3
+previous.previous_states: frozenset({
+    (<Player.black: 1>, 0),
+    (<Player.white: 2>, 7685528180565542275)})
+previous.next_player : Player.black
+previous.board.zobrist_hash() : 8139394106448984692   <== 前回のハッシュコード
+
+
+4) 次に白が J9 と打った時、previous の盤面状態は以下である。
+    previous.previous_states -- frozenset(
+        {(<Player.black: 1>, 8139394106448984692),
+         (<Player.black: 1>, 0),
+         (<Player.white: 2>, 7685528180565542275)})
+    previous.next_player -- Player.white
+    previous.board.zobrist_hash() -- 8684821617119420740
+
+    ここから、以下の式はどうなるか？
+    self.previous_states = frozenset(
+        previous.previous_states |
+       {( previous.next_player, previous.board.zobrist_hash())})
+    
+    self.previous_states = frozenset(
+        {(<Player.black: 1>, 8139394106448984692),
+         (<Player.black: 1>, 0),
+         (<Player.white: 2>, 7685528180565542275)}) |
+        {( <Player.white>, 8684821617119420740 )})
+        = ({(<Player.black: 1>, 0),
+            (<Player.white>, 7685528180565542275),
+            (<Player.black>, 8139394106448984692),
+            (<Player.white>, 8684821617119420740)})
+        
+
+Player.white J9
+previous.previous_states: frozenset({
+    (<Player.black: 1>, 8139394106448984692),
+    (<Player.black: 1>, 0),
+    (<Player.white: 2>, 7685528180565542275)})
+previous.next_player : Player.white
+previous.board.zobrist_hash() : 8684821617119420740   <== 前回のハッシュコード

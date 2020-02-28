@@ -1,0 +1,140 @@
+
+black, C3
+previous_states:
+    frozenset({
+        (<Player.white: 2>, 7685528180565542275),
+        (<Player.black: 1>, 5716123160841957083),
+        (<Player.black: 1>, 0)})
+
+white, G3
+
+black, D4
+
+white, B5
+
+black, E3
+
+white, J1
+
+previous_states:
+    frozenset({
+        (<Player.white: 2>, 7685528180565542275),
+        (<Player.black: 1>, 5716123160841957083),
+        (<Player.black: 1>, 2523014121856839),
+        (<Player.white: 2>, 5125658593032140267),
+        (<Player.black: 1>, 0)})
+
+black, F3
+
+white, A8
+
+previous_states:
+    frozenset({
+        (<Player.white: 2>, 7685528180565542275),
+        (<Player.black: 1>, 5716123160841957083),
+        (<Player.white: 2>, 1618459833676119504),
+        (<Player.black: 1>, 2523014121856839),
+        (<Player.white: 2>, 5125658593032140267),
+        (<Player.black: 1>, 0),
+        (<Player.black: 1>, 5023838170504289789)})
+
+------------------------------------------------------------
+black, C3
+white, E8
+black, C4
+white, E4
+
+previous.previous_states
+frozenset({
+    (<Player.black: 1>, 0),
+    (<Player.white: 2>, 7685528180565542275),
+    (<Player.black: 1>, 2316048139791631825)})
+----------------------------------------------------------------
+===============================================================================
+===============================================================================
+
+
+Player.black C3
+_hash code: 0                     <== 前回のハッシュコード
+<<previous.previous_states>>:
+EXPLAIN ------------------
+frozenset()                       <== frozenset
+<class 'frozenset'>
+ATTRIBUTES:
+previous.next_player
+EXPLAIN ------------------
+Player.black                      <== next_player
+<enum 'Player'>
+ATTRIBUTES:
+name:	black
+other:	Player.white
+value:	1
+previous.board.zobrist_hash()     <== previous.board.zobrist_hash
+_hash code: 0
+EXPLAIN ------------------
+0
+
+
+Player.white G5
+_hash code: 7685528180565542275       <== 前回のハッシュコード
+previous.previous_states:
+EXPLAIN ------------------
+frozenset({(<Player.black: 1>, 0)})   <== frozenset
+<class 'frozenset'>
+ATTRIBUTES:
+previous.next_player
+EXPLAIN ------------------
+Player.white                           <== next_player
+<enum 'Player'>
+ATTRIBUTES:
+name:	white
+other:	Player.black
+value:	2
+previous.board.zobrist_hash()
+_hash code: 7685528180565542275        <== previous.board.zobrist_hash
+EXPLAIN ------------------
+7685528180565542275
+
+
+
+Player.black D3
+_hash code: 8139394106448984692         <== 前回のハッシュコード
+previous.previous_states:
+EXPLAIN ------------------
+frozenset({(<Player.black: 1>, 0), (<Player.white: 2>, 7685528180565542275)})  <== frozenset
+<class 'frozenset'>
+ATTRIBUTES:
+previous.next_player
+EXPLAIN ------------------
+Player.black                            <== next_player
+<enum 'Player'>
+ATTRIBUTES:
+name:	black
+other:	Player.white
+value:	1
+previous.board.zobrist_hash()
+_hash code: 8139394106448984692         <== previous.board.zobrist_hash
+EXPLAIN ------------------
+8139394106448984692
+
+
+
+Player.white J9
+_hash code: 8684821617119420740          <== 前回のハッシュコード
+previous.previous_states:
+EXPLAIN ------------------
+frozenset({(<Player.black: 1>, 8139394106448984692), (<Player.black: 1>, 0), (<Player.white: 2>, 7685528180565542275)})                              <== frozenset
+<class 'frozenset'>
+ATTRIBUTES:
+previous.next_player
+EXPLAIN ------------------
+Player.white                             <== next_player
+<enum 'Player'>
+ATTRIBUTES:
+name:	white
+other:	Player.black
+value:	2
+previous.board.zobrist_hash()
+_hash code: 8684821617119420740           <== previous.board.zobrist_hash
+EXPLAIN ------------------
+8684821617119420740

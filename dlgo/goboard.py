@@ -230,7 +230,7 @@ class Board():
     # 盤の現在のゾブリストハッシュを返す
     def zobrist_hash( self ):
         tmp_hash = self._hash
-        # print( tmp_hash )
+        print("_hash code:", tmp_hash )
         return tmp_hash
         # return self._hash
     
@@ -247,6 +247,13 @@ class GameState():
             self.previous_states = frozenset(
                 previous.previous_states |
                 {( previous.next_player, previous.board.zobrist_hash())})  # <1>
+        if previous is not None:
+            print("previous.previous_states:")
+            explain(previous.previous_states)
+            print("previous.next_player")
+            explain(previous.next_player)
+            print("previous.board.zobrist_hash()")
+            explain(previous.board.zobrist_hash())
     # <1> 盤が空の場合、self.previous_statesは空のイミュータブルなfrozensetです。
     #     それ以外の場合は、次のプレーヤーの色と直前のゲーム状態のゾブリストハッシュ
     #     を追加します。(p81)
