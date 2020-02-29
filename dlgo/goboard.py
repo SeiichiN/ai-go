@@ -88,6 +88,7 @@ class GoString():
             ( self.liberties | go_string.liberties ) - combined_stones )
     # <1> 石の色が同じかをチェック
     # <2> | -- 論理和  combined_stones は、石の集合の論理和である。
+    #          0|0 = 0, 0|1 = 1, 1|0 = 1, 1|1 = 1
     # <3> 新しくクラスをインタンス化して、それを返している
     #     第3引数 -- 両方の呼吸点の集合の論理和をとって、石の集合との差集合を求めている。
     #     論理和をとる場合、重複したものは1つとみなされる。
@@ -229,10 +230,10 @@ class Board():
 
     # 盤の現在のゾブリストハッシュを返す
     def zobrist_hash( self ):
-        tmp_hash = self._hash
-        print("_hash code:", tmp_hash )
-        return tmp_hash
-        # return self._hash
+        # tmp_hash = self._hash
+        # print("_hash code:", tmp_hash )
+        # return tmp_hash
+        return self._hash
     
 
 class GameState():
@@ -326,6 +327,7 @@ class GameState():
     #     next_situation とする。
     # <4> self.previous_states の中に next_situation が含まれていれば、
     #     True、そうでなければ False を返す。
+    #     ハッシュ値が同じであるということは、二つが同じ配置であるということ。
 
     # この着手は指定されたゲーム状態に対して有効か？
     def is_valid_move( self, move ):

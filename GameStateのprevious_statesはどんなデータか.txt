@@ -4,37 +4,41 @@ goboard.py の中の GameState のところのデータがどうなっている�
 
 コンストラクタの各プロパティに値がセットされた時を調べてみた。
 
-"goboard.py" L250
-if self.previous_state is None:
-    self.previous_states = frozenset()
-else:
-    self.previous_states = frozenset(       # 以下の3行の式の値を調べる
-        previous.previous_states |          # <1>
-       {( previous.next_player, previous.board.zobrist_hash())})
-#  以下を挿入した
-if previous is not None:
-    print("previous.previous_states:")
-    explain(previous.previous_states)
-    print("previous.next_player")
-    explain(previous.next_player)
-    print("previous.board.zobrist_hash()")
-    explain(previous.board.zobrist_hash())
+"goboard.py" 
+245 if self.previous_state is None:
+246     self.previous_states = frozenset()
+247 else:
+248     self.previous_states = frozenset(       # 以下の3行の式の値を調べる
+249         previous.previous_states |          # <1>
+250        {( previous.next_player, previous.board.zobrist_hash())})
 # <1> | -- 論理和 -- 0と0は0、1と0は1、0と1は1、1と1は1。
+
+#  以下を挿入した
+
+251 if previous is not None:
+252     print("previous.previous_states:")
+253     explain(previous.previous_states)
+254     print("previous.next_player")
+255     explain(previous.next_player)
+256     print("previous.board.zobrist_hash()")
+257     explain(previous.board.zobrist_hash())
 
 
 1) まず、黒が第1手をC3にうったとき、previousの盤面状態は以下のようになる。
-    previous.previous_states -- frozenset()     # frozensetの引数は空である
+    previous.previous_states -- frozenset()     # 空の集合
     previous.next_player -- Player.black
     previous.board.zobrist_hash() -- 0
 
     ここから、以下の式はどうなるか？
-    self.previous_states = frozenset(
-        previous.previous_states |
-       {( previous.next_player, previous.board.zobrist_hash())})
-    
-    self.previous_states = frozenset(
-        frozenset() | {( Player.black, 0 )})
+    248 self.previous_states = frozenset(
+    249     previous.previous_states |
+    250    {( previous.next_player, previous.board.zobrist_hash())})
 
+    このように、previous_satesは空集合とハッシュ値0の和集合になる。
+    self.previous_states = frozenset(
+        {()} | {( Player.black, 0 )})
+
+(データ控え)
 Player.black C3
 previous.previous_states     : frozenset()
 previous.next_player         : Player.black
@@ -47,14 +51,17 @@ previous.board.zobrist_hash(): 0    <== 前回のハッシュコード
     previous.board.zobrist_hash() -- 7685528180565542275
 
     ここから、以下の式はどうなるか？
-    self.previous_states = frozenset(
-        previous.previous_states |
-       {( previous.next_player, previous.board.zobrist_hash())})
+    248 self.previous_states = frozenset(
+    249     previous.previous_states |
+    250    {( previous.next_player, previous.board.zobrist_hash())})
     
     self.previous_states = frozenset(
-        frozenset({(<Player.black: 1>, 0)}) | {( <Player.white>, 7685528180565542275 )})
+        {(<Player.black: 1>, 0)} | {( <Player.white>, 7685528180565542275 )})
         = ({(<Player.black: 1>, 0), ( <Player.white>, 7685528180565542275 )})
-        
+    つまり、{(<Player.black: 1>, 0)} と {( <Player.white>, 7685528180565542275 )}
+    の和集合である。
+
+(データ控え)
 Player.white G5
 previous.previous_states      : frozenset({(<Player.black: 1>, 0)})
 previous.next_player          : Player.white
@@ -73,13 +80,13 @@ previous.board.zobrist_hash() : 7685528180565542275   <== 前回のハッシュ�
        {( previous.next_player, previous.board.zobrist_hash())})  # <1>
     
     self.previous_states = frozenset(
-        ({(<Player.black: 1>, 0), (<Player.white: 2>, 7685528180565542275)}) |
+        {(<Player.black: 1>, 0), (<Player.white: 2>, 7685528180565542275)} |
         {( <Player.black>, 8139394106448984692 )})
-        = ({(<Player.black: 1>, 0),
+        = {(<Player.black: 1>, 0),
             (<Player.white>, 7685528180565542275),
-            (<Player.black>, 8139394106448984692)})
+            (<Player.black>, 8139394106448984692)}
         
-
+(データ控え)
 Player.black D3
 previous.previous_states: frozenset({
     (<Player.black: 1>, 0),
@@ -97,21 +104,21 @@ previous.board.zobrist_hash() : 8139394106448984692   <== 前回のハッシュ�
     previous.board.zobrist_hash() -- 8684821617119420740
 
     ここから、以下の式はどうなるか？
-    self.previous_states = frozenset(
-        previous.previous_states |
-       {( previous.next_player, previous.board.zobrist_hash())})
+    248 self.previous_states = frozenset(
+    249     previous.previous_states |
+    250    {( previous.next_player, previous.board.zobrist_hash())})
     
     self.previous_states = frozenset(
         {(<Player.black: 1>, 8139394106448984692),
          (<Player.black: 1>, 0),
          (<Player.white: 2>, 7685528180565542275)}) |
         {( <Player.white>, 8684821617119420740 )})
-        = ({(<Player.black: 1>, 0),
+        = {(<Player.black: 1>, 0),
             (<Player.white>, 7685528180565542275),
             (<Player.black>, 8139394106448984692),
-            (<Player.white>, 8684821617119420740)})
+            (<Player.white>, 8684821617119420740)}
         
-
+(データ控え)
 Player.white J9
 previous.previous_states: frozenset({
     (<Player.black: 1>, 8139394106448984692),
@@ -119,3 +126,9 @@ previous.previous_states: frozenset({
     (<Player.white: 2>, 7685528180565542275)})
 previous.next_player : Player.white
 previous.board.zobrist_hash() : 8684821617119420740   <== 前回のハッシュコード
+
+----[ 結論 ]---------------------------------------------------------------------
+GameStateでは、盤の情報を (Player, hash) というタプルでまとめ、差し手が進むたびに
+そのタプルを集合として追加している。
+コウの判定では、現在の盤面状況を表わすタプルと、過去の指し手の盤面情報のタプルと
+比べ、同じであればコウと判定している。
