@@ -1,10 +1,13 @@
-# goboard_slow.py
+# goboard.py
+# ゾブリストハッシュを使って高速化
 # Copyright (c) 2020 by Seiichi Nukayama
 
 # class Move():
 # class GoString():
 # class Board():
 # class GameState():
+
+DEBUG_MODE = False
 
 from explain import explain
 
@@ -74,7 +77,7 @@ class GoString():
     # 呼吸点を追加
     # with_liberty -- 集合に要素を追加する
     def with_liberty( self, point ):
-        new_liberties = sel.liberties | set([point])                 # <1>
+        new_liberties = self.liberties | set([point])                 # <1>
         return GoString( self.color, self.stones, new_liberties )
     # <1> 今までの連と加えたい要素の集合との排他的論理和
 
@@ -248,13 +251,14 @@ class GameState():
             self.previous_states = frozenset(
                 previous.previous_states |
                 {( previous.next_player, previous.board.zobrist_hash())})  # <1>
-        if previous is not None:
-            print("previous.previous_states:")
-            explain(previous.previous_states)
-            print("previous.next_player")
-            explain(previous.next_player)
-            print("previous.board.zobrist_hash()")
-            explain(previous.board.zobrist_hash())
+        if DEBUG_MODE:
+            if previous is not None:
+                print("previous.previous_states:")
+                explain(previous.previous_states)
+                print("previous.next_player")
+                explain(previous.next_player)
+                print("previous.board.zobrist_hash()")
+                explain(previous.board.zobrist_hash())
     # <1> 盤が空の場合、self.previous_statesは空のイミュータブルなfrozensetです。
     #     それ以外の場合は、次のプレーヤーの色と直前のゲーム状態のゾブリストハッシュ
     #     を追加します。(p81)
