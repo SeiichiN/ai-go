@@ -1,0 +1,44 @@
+minimax探索の根幹はこの best_result 関数である。
+この関数では再帰処理を使っている。
+
+<A>の部分が終了条件である。
+game_stateが is_over() であるとき、
+winner() が next_player すなわち 自分であるとき、GameResult.win が返る。
+winner() が None すなわち 勝者がいないときは、GameResult.draw が返る。
+その他は、GameResult.loss が返る。
+
+def best_result(game_state):
+    # <A> 終了条件
+    if game_state.is_over():                                  
+        if game_state.winner() == game_state.next_player:
+            return GameResult.win
+        elif game_state.winner() is None:
+            return GameResult.draw
+        else:
+            return GameResult.loss
+
+    # <B> 次の手を求める処理
+    best_result_so_far = GameResult.loss                         # <1>
+    opponent = game_state.next_player.other                      # <2>
+    for candidate_move in game_state.legal_moves():              # <3>
+        next_state = game_state.apply_move(candidate_move)       # <4>
+        opponent_best_result = best_result(next_state)           # <5>
+        our_result = reverse_game_result(opponent_best_result)   # <6>
+        if our_result.value > best_result_so_far.value:          # <7>
+            best_result_so_far = our_result                      # <8>
+    return best_result_so_far                                    # <9>
+# best_result_so_far -- これまでの最高の結果
+
+<B>が次の手を求める処理で、再帰処理をしながら最終的に <A> の終了条件に
+いきつく。
+<1> -- best_result_so_far に GameResult.loss をセットしておく。
+<2> -- opponent を相手とする。
+<3> -- game_state.legal_move() -- 妥当と思われる次の手のリストを返す。
+       candidate_move -- そのリストを１つひとつ candidate_move として
+       検討する。
+<4> -- next_state -- candidate_move すなわち、検討すべき次の手を適用し
+       た局面。
+<5> -- その next_state を引数として、この best_result を実行する。
+
+例えば、
+
