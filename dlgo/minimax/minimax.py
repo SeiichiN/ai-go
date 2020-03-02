@@ -37,7 +37,7 @@ def best_result(game_state):
         opponent_best_result = best_result(next_state)
         our_result = reverse_game_result(opponent_best_result)
         if our_result.value > best_result_so_far.value:
-            best_resunt_so_far = our_result
+            best_result_so_far = our_result
     return best_result_so_far
 # best_result_so_far -- これまでの最高の結果
 
@@ -55,7 +55,7 @@ class MinimaxAgent(Agent):
             our_best_outcome = reverse_game_result(opponent_best_outcome)
             if our_best_outcome == GameResult.win:
                 winning_moves.append(possible_move)
-            elif out_best_outcome == GameResult.draw:
+            elif our_best_outcome == GameResult.draw:
                 draw_moves.append(possible_move)
             else:
                 losing_moves.append(possible_move)
