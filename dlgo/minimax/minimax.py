@@ -34,14 +34,16 @@ def best_result(game_state):
     opponent = game_state.next_player.other
     for candidate_move in game_state.legal_moves():
         next_state = game_state.apply_move(candidate_move)
+        print('プレーヤー %s: 検討する手 %s ' % (next_state.next_player, candidate_move.point))
         opponent_best_result = best_result(next_state)
         our_result = reverse_game_result(opponent_best_result)
-        print('プレーヤー %s: 検討する手 %s 勝負 %s >'
+        print('----------- %s --------- %s ' % (next_state.next_player, opponent_best_result))
+        if our_result.value > best_result_so_far.value:
+            best_result_so_far = our_result
+        print('>>> 決定：プレーヤー %s:  %s 勝負 %s'
               % (next_state.next_player,
                  candidate_move.point,
                  our_result))
-        if our_result.value > best_result_so_far.value:
-            best_result_so_far = our_result
     return best_result_so_far
 # best_result_so_far -- これまでの最高の結果
 
