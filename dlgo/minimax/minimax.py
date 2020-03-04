@@ -21,7 +21,7 @@ def reverse_game_result(game_result):
     return GameResult.draw
 
     
-def best_result(game_state):
+def best_result(game_state, n=0):
     if game_state.is_over():
         if game_state.winner() == game_state.next_player:
             return GameResult.win
@@ -33,20 +33,26 @@ def best_result(game_state):
     best_result_so_far = GameResult.loss
     opponent = game_state.next_player.other
     for candidate_move in game_state.legal_moves():
+        n = n + 1
         next_state = game_state.apply_move(candidate_move)
-        print('プレーヤー %s: 検討する手 %s ' % (next_state.next_player, candidate_move.point))
-        opponent_best_result = best_result(next_state)
+        print('%d ----------- %s --------- %s' %
+              (n, next_state.next_player, candidate_move.point))
+        opponent_best_result = best_result(next_state, n)
         our_result = reverse_game_result(opponent_best_result)
-        print('----------- %s --------- %s ' % (next_state.next_player, opponent_best_result))
         if our_result.value > best_result_so_far.value:
             best_result_so_far = our_result
-        print('>>> 決定：プレーヤー %s:  %s 勝負 %s'
-              % (next_state.next_player,
-                 candidate_move.point,
-                 our_result))
+            print('%d プレーヤー %s: 手 %s %s' %
+                  (n, next_state.next_player, candidate_move.point, our_result))
+        print('%d ------------------------------------------------------------' % n)
     return best_result_so_far
 # best_result_so_far -- これまでの最高の結果
 
+# print('プレーヤー %s: 検討する手 %s ' % (next_state.next_player, candidate_move.point))
+# print('----------- %s --------- %s ' % (next_state.next_player, opponent_best_result))
+# print('>>> 決定：プレーヤー %s:  %s 勝負 %s'
+#     % (next_state.next_player,
+#        candidate_move.point,
+#        our_result))
 
 
 class MinimaxAgent(Agent):

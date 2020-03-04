@@ -49,7 +49,7 @@ def best_result(game_state):
 
 今、黒は B2 と打ったところである。
 
-(1) B1(o)と打つ手から検討しよう。
+(1) B1(o)-(row=1,col=2)と打つ手から検討する。
   
     A B C
   1|o|o|
@@ -58,24 +58,43 @@ def best_result(game_state):
 
   それに対して黒(x)は、C1、C2、A3、B3、C3 という手が考えられる。
 
-  (1-1) 黒(x)が C1 と打った場合
-
+  (1-1) 黒(x)が C1(row=1,col=3) と打った場合
+              next_state.next_player == Player.black
       A B C
     1|o|o|x
     2|x|x|
     3| | |
 
-    (1-1-1) それに対して白(o)が C2 と打った場合
-
+    (1-1-1) それに対して白(o)が C2(row=2,col=3) と打った場合
+                 next_state.next_player == Player.white
         A B C
       1|o|o|x
       2|x|x|o
       3| | |
 
-      (1-1-1-1) それに対して黒(x)が A1 と打った場合
-
+      (1-1-1-1) それに対して黒(x)が A3(row=3,col=1) と打った場合
+                   next_state.next_player === Player.black
+                   opponent_best_result              our_result
+                   GameResult.win    --> reverse --> GameResult.loss
           A B C
         1|o|o|x
         2|x|x|o
         3|x| |
 
+      (1-1-1-2) 次は黒(x)が B3(row=3,col=2) と打った場合
+                   next_state.next_player === Player.black
+          A B C
+        1|o|o|x
+        2|x|x|o
+        3| |x|
+
+        (1-1-1-2-1) それに対して白(o)が A3(row=1,col=2) と打った場合
+                     next_state.next_player === Player.white
+                     opponent_best_result              our_result
+                     GameResult.draw   --> reverse --> GameResult.draw
+            A B C
+          1|o|o|x
+          2|x|x|o
+          3|o|x|
+  
+  他にもいろいろな結果が考えられるが、
