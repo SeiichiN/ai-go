@@ -98,3 +98,20 @@ def best_result(game_state):
           3|o|x|
   
   他にもいろいろな結果が考えられるが、
+  (1-1)のように、黒(x)が C1(row=1,col=3) と打った場合には、
+  GameResult.loss と GameResult.draw の2種類の結果が得られる。
+
+  黒(x)も best_result関数を使って GameResult.win の手を探し出す。
+  (1)の白(o)B1 という手については、黒が C3 (GameResult.win) という手を
+  見つけだす。だから、白(o)B1 という手は、GameResult.loss という値を
+  返すことになる。
+
+  白(o)は、B1, C1, C2, A3, B3, C3 と、順に best_result関数を使って最善
+  手を探す。B1 は GameResult.loss であったが、C1, A3, B3, C3 について
+  は、黒(x)が C2 と打てば GameResult.loss という値が返ってくるので、
+  白(o)の C2 という手のみが GameResult.draw もしくは GameResult.win
+  という値を返すことになる。
+
+
+
+修正時刻： Thu Mar  5 00:06:32 2020
