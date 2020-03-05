@@ -40,7 +40,7 @@ def main():
         print_board(game.board)
         if game.next_player == human_player:
             human_move = input('-- ')
-            point = point_from_coords(human_move.strip())
+            point = point_from_coords(human_move.strip().upper())
             move = ttt.Move(point)
         else:
             move = bot.select_move(game)
@@ -56,3 +56,6 @@ def main():
 
 if __name__ == '__main__':
     main()
+
+# -----------------------------------
+# 修正時刻： Thu Mar  5 18:11:53 2020
