@@ -18,8 +18,12 @@ def eval_situation(game_state):
 # 深さで枝刈りされたミニマックス検索    
 def best_result(game_state, max_depth, eval_fn):
     if game_state.is_over():
-        if game_state.winner() == game_state.next_player:
+        if game_state.winner() == game_state.next_player and max_depth == 2:
+            return MAX_SCORE + 10
+        elif game_state.winner() == game_state.next_player:
             return MAX_SCORE
+        elif game_state.winner() == game_state.next_player.other and max_depth == 3:
+            return MIN_SCORE - 10
         elif game_state.winner() == game_state.next_player.other:
             return MIN_SCORE
         else:
@@ -44,32 +48,44 @@ def print_best_moves(str, best_moves):
 
 class MinimaxAgent(Agent):
     def select_move(self, game_state):
+        high_moves = []
         best_moves = []
         better_moves = []
         other_moves = []
+        low_moves = []
         for possible_move in game_state.legal_moves():
             print('possible_move %s %s' % (possible_move.point, game_state.next_player))
             next_state = game_state.apply_move(possible_move)        # <1>
             opponent_best_outcome = best_result(next_state, DEPTH, eval_situation)   # <2>
             our_best_outcome = -1 * opponent_best_outcome            # <3>
             print('our_best_outcome', our_best_outcome)
-            if our_best_outcome == MAX_SCORE:                        # <4>
+            if our_best_outcome > MAX_SCORE:                        # <4>
+                high_moves.append(possible_move)
+            elif our_best_outcome == MAX_SCORE:
                 best_moves.append(possible_move)
             elif our_best_outcome == 0:
                 better_moves.append(possible_move)
             elif our_best_outcome == MIN_SCORE:
                 other_moves.append(possible_move)
+            elif our_best_outcome < MIN_SCORE:
+                low_moves.append(possible_move)
             else:
                 print('=================!')                          # <5>
+        if high_moves:
+            print_best_moves('high', high_moves)
+            return random.choice(high_moves)
         if best_moves:
             print_best_moves('best', best_moves)
             return random.choice(best_moves)
-        elif better_moves:
+        if better_moves:
             print_best_moves('better', better_moves)
             return random.choice(better_moves)
-        else:
+        if other_moves:
             print_best_moves('other', other_moves)
             return random.choice(other_moves)
+        if low_moves:
+            print_best_moves('low', low_moves)
+            return random.choice(low_moves)
     # <1> game_state.apply_move は、next_state を 相手側とする。
     #     つまり、possible_moveを適用した盤状況で、player は相手側であ
     #     る。
@@ -84,4 +100,4 @@ class MinimaxAgent(Agent):
     # <5> それ以外は無いはずだけど。
     
 # -----------------------------------
-# 修正時刻： Fri Mar  6 21:12:36 2020
+# 修正時刻： Sat Mar  7 08:03:16 2020
