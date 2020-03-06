@@ -119,3 +119,41 @@ class GameState:
         if self._has_3_in_a_row(Player.o):
             return Player.o
         return None
+
+    def is_lose(self, player):
+        if self.board.get(Point(1,1)) == player.other and \
+           self.board.get(Point(1,2)) == player:
+            print('1,1-1,2')
+            return True
+        elif self.board.get(Point(1,1)) == player.other and \
+           self.board.get(Point(2,1)) == player:
+            print('1,1-2,1')
+            return True
+        elif self.board.get(Point(1,3)) == player.other and \
+           self.board.get(Point(1,2)) == player:
+            print('1,3-1,2')
+            return True
+        elif self.board.get(Point(1,3)) == player.other and \
+           self.board.get(Point(2,3)) == player:
+            print('1,3-2,3')
+            return True
+        elif self.board.get(Point(3,1)) == player.other and \
+           self.board.get(Point(2,1)) == player:
+            print('3,1-2,1')
+            return True
+        elif self.board.get(Point(3,1)) == player.other and \
+           self.board.get(Point(3,2)) == player:
+            print('3,1-3,2')
+            return True
+        elif self.board.get(Point(3,3)) == player.other and \
+           self.board.get(Point(2,3)) == player:
+            print('3,3-2,3')
+            return True
+        elif self.board.get(Point(3,3)) == player.other and \
+           self.board.get(Point(3,2)) == player:
+            print('3,3-3,2')
+            return True
+        
+    
+# -----------------------------------
+# 修正時刻： Fri Mar  6 20:00:32 2020

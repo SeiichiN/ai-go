@@ -1,5 +1,6 @@
 # minimax.py
-# 3目並べを解く：ミニマックスの例 p94
+# 3目並べを解く：ミニマックスの例 p102
+# 深さで枝刈りされたミニマックス検索    
 # Copyright (c) 2020 by Seiichi Nukayama
 
 import enum
@@ -7,98 +8,80 @@ import random
 
 from dlgo.agent import Agent
 
-MAX_SCORE = 1
-MIN_SCORE = -1
-
-class GameResult(enum.Enum):
-    loss = 1
-    draw = 2
-    win = 3
-
-
-def reverse_game_result(game_result):
-    if game_result == MAX_SCORE:    # GameResult.loss:
-        return game_result.win
-    if game_result == MIN_SCORE:    # GameResult.win:
-        return game_result.loss
-    return GameResult.draw
+MAX_SCORE = 10
+MIN_SCORE = -10
+DEPTH = 3
 
 def eval_situation(game_state):
-    opponent = game_state.next_player.other
-    if game_state._has_3_in_a_row(opponent):
-        print('%s が3つそろった' % opponent)
-        return MIN_SCORE
-    elif game_state._has_3_in_a_row(game_state.next_player):
-        print('%s が3つそろった' % game_state.next_player)
-        return MAX_SCORE
-    else:
-        print('3つそろったのは無し')
-        return 0
+    return 0
 
 # 深さで枝刈りされたミニマックス検索    
 def best_result(game_state, max_depth, eval_fn):
-    opponent = game_state.next_player.other
     if game_state.is_over():
-        if game_state.winner() == opponent: 
-            print('OVER! %s' %  opponent)
+        if game_state.winner() == game_state.next_player:
             return MAX_SCORE
-        else:
-            print('OVER! %s' %  game_state.next_player)
+        elif game_state.winner() == game_state.next_player.other:
             return MIN_SCORE
+        else:
+            return 0
 
-    # if game_state._has_3_in_a_row(opponent):
-    #    print('%s 333' % opponent)
-    #    return eval_fn(game_state)
-        
     if max_depth == 0:
         return eval_fn(game_state)
 
     best_so_far = MIN_SCORE
     for candidate_move in game_state.legal_moves():
-        # print('%s: candidate_move %s %s' % (max_depth, candidate_move.point, game_state.next_player))
         next_state = game_state.apply_move(candidate_move)
         opponent_best_result = best_result(next_state, max_depth - 1, eval_fn)
         our_result =  -1 * opponent_best_result
         if our_result > best_so_far:
             best_so_far = our_result
-    print('best_so_far', best_so_far)
     return best_so_far
 # best_so_far -- これまでの最高
 
+def print_best_moves(str, best_moves):
+    for move in best_moves:
+        print(str, move.point)
+
 class MinimaxAgent(Agent):
     def select_move(self, game_state):
-        winning_moves = []
-        draw_moves = []
-        losing_moves = []
-        for possible_move in game_state.legal_moves():              # <1>
+        best_moves = []
+        better_moves = []
+        other_moves = []
+        for possible_move in game_state.legal_moves():
             print('possible_move %s %s' % (possible_move.point, game_state.next_player))
-            next_state = game_state.apply_move(possible_move)        # <2>
-            opponent_best_outcome = best_result(next_state, 3, eval_situation)          # <3>
-            # <4>
-            print('opponent_best_outcome ', opponent_best_outcome)
-            our_best_outcome = reverse_game_result(opponent_best_outcome)
+            next_state = game_state.apply_move(possible_move)        # <1>
+            opponent_best_outcome = best_result(next_state, DEPTH, eval_situation)   # <2>
+            our_best_outcome = -1 * opponent_best_outcome            # <3>
             print('our_best_outcome', our_best_outcome)
-            if our_best_outcome == GameResult.win:
-                winning_moves.append(possible_move)
-            elif our_best_outcome == GameResult.draw:
-                draw_moves.append(possible_move)
+            if our_best_outcome == MAX_SCORE:                        # <4>
+                best_moves.append(possible_move)
+            elif our_best_outcome == 0:
+                better_moves.append(possible_move)
+            elif our_best_outcome == MIN_SCORE:
+                other_moves.append(possible_move)
             else:
-                losing_moves.append(possible_move)
-        if winning_moves:
-            return random.choice(winning_moves)
-        if draw_moves:
-            return random.choice(draw_moves)
-        return random.choice(losing_moves)
-    # <1> GameStateクラスに legal_moves メソッドを作らねばならない
-    # <2> possible_move を適用したあとの GameState が next_state である。
-    #     仮にこの手を打ってみたとして、その結果を next_state に出力する
-    # <3> best_result -- ゲームの状態から最善の手をみつける
-    #     こちら側の仮の手に対して、相手の最善の手を予想してみる
-    #     opponent_best_outcome -- 相手の最善の予想手
-    # <4> reverse_game_result -- 相手の手に対するこちら側の最善の手
-    #     相手 win   <--> 自分 loss
-    #          draw  <-->      draw
-    #          loss  <-->      win
+                print('=================!')                          # <5>
+        if best_moves:
+            print_best_moves('best', best_moves)
+            return random.choice(best_moves)
+        elif better_moves:
+            print_best_moves('better', better_moves)
+            return random.choice(better_moves)
+        else:
+            print_best_moves('other', other_moves)
+            return random.choice(other_moves)
+    # <1> game_state.apply_move は、next_state を 相手側とする。
+    #     つまり、possible_moveを適用した盤状況で、player は相手側であ
+    #     る。
+    # <2> 探索の深さを 2 としてみた。
+    #     opponent_best_outcome -- 相手側が最善手を打った場合の値。
+    #                              MAX_SCORE, 0, MIN_SCORE のいずれか。
+    # <3> 相手が MAX_SCORE なら、こちら側は MIN_SCORE である。
+    # <4> our_best_outcome が MAX_SCORE, 0, MIN_SCORE で処理を分ける。
+    #     MAX_SCOREの場合 -- best_moves のリストに着手を加える。
+    #     0               -- better_moves         〃
+    #     MIN_SCORE       -- other_moves          〃
+    # <5> それ以外は無いはずだけど。
     
 # -----------------------------------
-# 修正時刻： Thu Mar  5 22:30:47 2020
+# 修正時刻： Fri Mar  6 21:12:36 2020
