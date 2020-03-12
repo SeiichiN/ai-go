@@ -134,4 +134,5 @@ def best_result(game_state):
 
 
 
-修正時刻： Thu Mar  5 00:06:32 2020
+
+修正時刻： Fri Mar 13 08:06:56 2020
