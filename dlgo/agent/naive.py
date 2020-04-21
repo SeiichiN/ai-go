@@ -5,8 +5,12 @@
 import random
 from dlgo.agent.base import Agent
 from dlgo.agent.helpers import is_point_an_eye
-from dlgo.goboard_slow import Move
+# from dlgo.goboard_slow import Move
+from dlgo.goboard import Move
 from dlgo.gotypes import Point
+# from dlgo.gotypes import Player
+
+
 
 # candidates -- 有効な着手ができる候補リスト
 # もし、candidatesが無ければ、パスする
@@ -32,3 +36,7 @@ class RandomBot( Agent ):
     # <2> 盤上のすべての着手可能な点を「候補点」として candidates リストに入れている。
     # <3> もしも、候補点が無ければ、パスせざるを得ん。
     # <4> 候補点のリストの中から、ランダムに選んで、「指し手」としている。
+
+
+#--------------------------------------
+# 修正時刻： Tue Apr 21 09:52:07 2020

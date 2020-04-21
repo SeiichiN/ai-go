@@ -1,19 +1,42 @@
 # minimax.py
 # 3目並べを解く：ミニマックスの例 p102
+# 9路盤でも使える
 # 深さで枝刈りされたミニマックス検索    
 # Copyright (c) 2020 by Seiichi Nukayama
 
-import enum
+# import enum
 import random
 
 from dlgo.agent import Agent
+from dlgo.gotypes import Point
+from dlgo.gotypes import Player
 
 MAX_SCORE = 10
 MIN_SCORE = -10
-DEPTH = 3
+DEPTH = 2
+
+# とても単純化された囲碁の局面評価ヒューリスティック
+# p100
+def capture_diff( game_state ):
+    black_stones = 0
+    white_stones = 0
+    for r in range( 1, game_state.board.num_rows + 1 ):
+        for c in range( 1, game_state.board.num_cols + 1 ):
+            p = Point(r, c)
+            color = game_state.board.get(p)
+            if color == Player.black:
+                black_stones += 1
+            elif color == Player.white:
+                white_stones += 1
+                
+    diff = black_stones - white_stones
+    if game_state.next_player == Player.black:
+        return diff
+    return -1 * diff
 
 def eval_situation(game_state):
-    return 0
+    return capture_diff(game_state)
+
 
 # 深さで枝刈りされたミニマックス検索    
 def best_result(game_state, max_depth, eval_fn):
@@ -47,7 +70,7 @@ class MinimaxAgent(Agent):
         best_moves = []
         our_best_outcome = None
         for possible_move in game_state.legal_moves():
-            print('possible_move %s %s' % (possible_move.point, game_state.next_player))
+            # print('possible_move %s %s' % (possible_move.point, game_state.next_player))
             next_state = game_state.apply_move(possible_move)        # <1>
             opponent_best_outcome = best_result(next_state, DEPTH, eval_situation)   # <2>
             our_better_outcome = -1 * opponent_best_outcome          # <3>
@@ -62,10 +85,10 @@ class MinimaxAgent(Agent):
                 best_moves.append(possible_move)
             else:
                 print('負ける手なので、考慮の対象外')
-            print('our_better_outcome:%d  our_best_outcome:%d' % (our_better_outcome, our_best_outcome))
+            # print('our_better_outcome:%d  our_best_outcome:%d' % (our_better_outcome, our_best_outcome))
 
         if best_moves:
-            print_best_moves('best', best_moves)
+            # print_best_moves('best', best_moves)
             return random.choice(best_moves)
         else:
             print('best_movesがないなんて、あり得ない...')
@@ -84,4 +107,4 @@ class MinimaxAgent(Agent):
 
     
 # -----------------------------------
-# 修正時刻： Mon Mar  9 11:23:42 2020
+# 修正時刻： Tue Apr 21 09:41:30 2020

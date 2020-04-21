@@ -7,8 +7,8 @@
 # class Board():
 # class GameState():
 
-DEBUG_MODE = False
-
+DEBUG_MODE = True
+# オブジェクトの中身をみる
 from explain import explain
 
 import sys
@@ -16,6 +16,15 @@ import sys
 # p56
 import copy
 from dlgo.gotypes import Player
+from dlgo.gotypes import Point
+
+BOARD_SIZE = 9
+
+def chotto ():
+    x = input()
+    if x == "q":
+        sys.exit(1)
+    
 
 # Move(着手)
 #   Move.play(point) -- そのポイントをポイントとする
@@ -34,7 +43,7 @@ class Move():
         #     is_play, is_pass, is_resign は、True / False の値をとる
 
     # クラスメソッド -- インスタンス化せずにクラスから直接呼び出すことができる
-    # cls -- クラスのこと。呼び出すときの引数は point から。
+    # cls -- クラス(自分自身)のこと。呼び出すときの引数は point から。
     # play(打つ) -- プロパティself.point に 引数point をセット。
     @classmethod                    
     def play( cls, point ):         
@@ -139,8 +148,7 @@ class Board():
         adjacent_same_color = []              # 同じ色のリスト
         adjacent_opposite_color = []          # 相手の色のリスト
         liberties = []                        # 呼吸点のリスト
-        # print( Point(3, 5).neighbors() )
-        # [ Point(row=15, col=6), Point(row=17, col=6), Point(row=16, col=5), Point(row=16, col=7) ]
+
         for neighbor in point.neighbors():
             if not self.is_on_grid( neighbor ):                # <1>
                 continue
@@ -150,9 +158,9 @@ class Board():
             elif neighbor_string.color == player:               # <4>
                 if neighbor_string not in adjacent_same_color:
                     adjacent_same_color.append( neighbor_string )
-                else:
-                    if neighbor_string not in adjacent_opposite_color:
-                        adjacent_opposite_color.append( neighbor_string )
+            else:
+                if neighbor_string not in adjacent_opposite_color:
+                    adjacent_opposite_color.append( neighbor_string )
         new_string = GoString( player, [point], liberties )      # <5>
         # <1> neighborが盤上の点ではなかったら、パス
         # <2> _grid.get( key ) -- 指定されたkeyがあれば、その連情報を返す。
@@ -251,14 +259,14 @@ class GameState():
             self.previous_states = frozenset(
                 previous.previous_states |
                 {( previous.next_player, previous.board.zobrist_hash())})  # <1>
-        if DEBUG_MODE:
-            if previous is not None:
-                print("previous.previous_states:")
-                explain(previous.previous_states)
-                print("previous.next_player")
-                explain(previous.next_player)
-                print("previous.board.zobrist_hash()")
-                explain(previous.board.zobrist_hash())
+#         if DEBUG_MODE:
+#             if previous is not None:
+#                 print("previous.previous_states:")
+#                 explain(previous.previous_states)
+#                 print("previous.next_player")
+#                 explain(previous.next_player)
+#                 print("previous.board.zobrist_hash()")
+#                 explain(previous.board.zobrist_hash())
     # <1> 盤が空の場合、self.previous_statesは空のイミュータブルなfrozensetです。
     #     それ以外の場合は、次のプレーヤーの色と直前のゲーム状態のゾブリストハッシュ
     #     を追加します。(p81)
@@ -284,6 +292,7 @@ class GameState():
         return GameState( board, Player.black, None, None )
     # <1> board_sizeオブジェクトが int型のインスタンスであれば True
     # <2> *board_size -- 9 9 どうもタプルやリストの中の値だけをとりだしてくれるみたい
+    #     *(アスタリスク)がつくと、要素をリストとして展開してくれる。
 
     # 終局しているか判定
     def is_over( self ):
@@ -302,6 +311,12 @@ class GameState():
     #     そうでなければ False を返す
 
     # 自殺手のルールを強制する
+    # @param:
+    #   player
+    #   move
+    # @return:
+    #   true -- 自殺手である
+    #   false -- 自殺手ではない
     def is_move_self_capture( self, player, move ):
         if not move.is_play:                                   # <1>
             return False
@@ -350,6 +365,17 @@ class GameState():
     # <5> 指し手がコウである場合
     #     <3><4><5>がともに成立することって、あるのかな？
 
+    def legal_moves(self):
+        ROWS = tuple(range(1, BOARD_SIZE + 1))
+        COLS = tuple(range(1, BOARD_SIZE + 1))
+        
+        moves = []
+        for row in ROWS:
+            for col in COLS:
+                move = Move(Point(row, col))
+                if self.is_valid_move(move):
+                    moves.append(move)
+        return moves
 
 #--------------------------------------
-# 修正時刻： Sun Mar  1 09:37:52 2020
+# 修正時刻： Tue Apr 21 15:21:10 2020

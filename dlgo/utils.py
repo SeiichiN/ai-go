@@ -38,3 +38,6 @@ def point_from_coords( coords ):
     col = COLS.index( coords[0] ) + 1
     row = int( coords[ 1: ])
     return gotypes.Point( row=row, col=col )
+
+
+# 修正時刻： Mon Apr 20 09:17:43 2020

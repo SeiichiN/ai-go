@@ -4,6 +4,7 @@
 
 #from dlgo.agent import base, helpers, naive
 from dlgo import agent
+from dlgo import minimax
 from dlgo import goboard
 from dlgo import gotypes
 from dlgo.utils import print_board, print_move
@@ -15,8 +16,10 @@ def main():
     board_size = 9
     game = goboard.GameState.new_game( board_size )
     bots = {
-        gotypes.Player.black: agent.RandomBot(),
-        gotypes.Player.white: agent.RandomBot(),
+        # gotypes.Player.black: agent.RandomBot(),
+        # gotypes.Player.white: agent.RandomBot(),
+        gotypes.Player.black: minimax.MinimaxAgent(),
+        gotypes.Player.white: minimax.MinimaxAgent(),
     }
     count = 0
     while not game.is_over():
@@ -25,6 +28,7 @@ def main():
         print( chr(27) + "[2J" )
         print_board( game.board )                       # <1>
         bot_move = bots[ game.next_player ].select_move( game )
+        # bot_move = bots[ game.next_player ].select_move( game )
         print_move( game.next_player, bot_move )
         game = game.apply_move( bot_move )
         # if count is 50:
@@ -38,3 +42,5 @@ if __name__ == '__main__':                             # <2>
 #     もし、「python3 bot_v_bot.py」として起動した場合、
 #     __name__ には、「__main__」がはいる。
 
+#------------------------------------
+# 修正時刻： Tue Apr 21 16:37:55 2020
